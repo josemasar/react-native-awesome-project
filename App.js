@@ -1,7 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, Button, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Platform, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Sharing from 'expo-sharing'
 
 export default function App() {
 
@@ -21,27 +22,41 @@ export default function App() {
       return;
     }
 
-    setSelectedImage({localUri: pickerResult.uri})
+    if(Platform.OS === 'web'){
+      Alert.alert("This functionality is not available in the web browser")
+    }else{
+      setSelectedImage({localUri: pickerResult.uri})
+    }
+    
+  }
+
+  const openShareDialog = async () => {
+    if(!(await Sharing.isAvailableAsync())){
+      alert("Sharing, is not available in your platform");
+      return;
+    }
+
+    await Sharing.shareAsync(selectedImage.localUri);
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Select an image from your Phone!</Text>
-      <Image source={{uri: selectedImage !== null ? selectedImage.localUri : "https://picsum.photos/200"}} style={styles.image}/>
-      <Button 
-        color="blue"
-        title="This is only a button"
-        accessibilityLabel="you will learn more"
-        onPress={ () => Alert.alert("Funciona?")}
-      />
+      <TouchableOpacity
+        onPress={openImagePickerAsync}
+        >
+        <Image source={{uri: selectedImage !== null ? selectedImage.localUri : "https://picsum.photos/200"}} style={styles.image}/>
+      </TouchableOpacity>
+      { selectedImage ? 
       <TouchableOpacity
       style={styles.button}
       accessibilityLabel="very customizable button"
-      onPress={openImagePickerAsync}
+      onPress={ openShareDialog }
       >
-        <Text style={styles.buttonText}>New image</Text>
+        <Text style={styles.buttonText}>Share this image!</Text>
       </TouchableOpacity>
-
+      : <View/>
+      }
       <StatusBar style="auto" />
     </View>
   );
